@@ -112,8 +112,7 @@ void loop()
   
   // Display time
   SerialUSB.print (millis()-ti,DEC);
-  SerialUSB.print ("\t");
-
+  SerialUSB.print (",");
   
   // _______________
   // ::: Counter :::
@@ -146,7 +145,7 @@ void loop()
     // Display values
   
   // Accelerometer
-  SerialUSB.print (ax,DEC); 
+  /*SerialUSB.print (ax,DEC); 
   SerialUSB.print ("\t");
   SerialUSB.print (ay,DEC);
   SerialUSB.print ("\t");
@@ -160,7 +159,7 @@ void loop()
   SerialUSB.print ("\t");
   SerialUSB.print (gz,DEC);  
   SerialUSB.print ("\t");
-
+  */
   
   // _____________________
   // :::  Magnetometer ::: 
@@ -190,13 +189,11 @@ void loop()
   
   // Magnetometer
   SerialUSB.print (mx+200,DEC); 
-  SerialUSB.print ("\t");
+  SerialUSB.print (",");
   SerialUSB.print (my-70,DEC);
-  SerialUSB.print ("\t");
+  SerialUSB.print (",");
   SerialUSB.print (mz-700,DEC);  
-  SerialUSB.print ("\t");
-  
-  
+  //SerialUSB.print ("");
   
   // End of line
   SerialUSB.println("");
