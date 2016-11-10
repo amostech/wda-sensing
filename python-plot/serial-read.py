@@ -4,7 +4,7 @@ import threading
 import random
 import serial
 
-ser = serial.Serial('/dev/cu.usbmodem1411', baudrate=115200, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS,timeout=0)
+ser = serial.Serial('/dev/cu.usbmodem1421', baudrate=115200, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS,timeout=0)
 
 while True:
     s = ser.readline()
