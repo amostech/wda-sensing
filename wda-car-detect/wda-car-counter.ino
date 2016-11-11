@@ -89,26 +89,52 @@ void setup()
 }
 
 // Counter
-long int carCounter = 0;
-
-#define THRESHOLD_Y 100
+long int cpt=0;
 
 // Main loop, read and display data
 void loop()
 {
+ 
+  // Display time
+  SerialUSB.print (millis()-ti,DEC);
+  SerialUSB.print (",");
+  
+  // _____________________
+  // :::  Magnetometer ::: 
+  
+  // Read register Status 1 and wait for the DRDY: Data Ready
+  
+  uint8_t ST1;
+  do
+  {
+    I2Cread(MAG_ADDRESS,0x02,1,&ST1);
+  }
+  while (!(ST1&0x01));
 
+  // Read magnetometer data  
+  uint8_t Mag[7];  
+  I2Cread(MAG_ADDRESS,0x03,7,Mag);
+  
+
+  // Create 16 bits values from 8 bits data
+  
   // Magnetometer
   int16_t mx=-(Mag[3]<<8 | Mag[2]);
   int16_t my=-(Mag[1]<<8 | Mag[0]);
   int16_t mz=-(Mag[5]<<8 | Mag[4]);
-
-  if( abs(my) >= THRESHOLD_Y ) {
-    //Consider a car passed and report in serial port...
-    carCounter++;
-    SerialUSB.print ("Car detected. Current Counter: "); 
-    SerialUSB.print (carCounter, DEC); 
-  }
   
+  
+  // Magnetometer
+  SerialUSB.print (mx+200,DEC); 
+  SerialUSB.print (",");
+  SerialUSB.print (my-70,DEC);
+  SerialUSB.print (",");
+  SerialUSB.print (mz-700,DEC);  
+  //SerialUSB.print ("");
+  
+  // End of line
+  SerialUSB.println("");
+//  delay(100);    
 }
 
 
