@@ -55,7 +55,7 @@ void setup()
   Wire.begin();
 
   while(!SerialUSB);
-    SerialUSB.begin(115200);
+    SerialUSB.begin(9600);
 
   uint8_t Buf[1];
   int i = 0;
