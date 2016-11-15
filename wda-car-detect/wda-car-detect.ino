@@ -91,12 +91,22 @@ void setup()
 // Counter
 long int carCounter = 0;
 
-#define THRESHOLD_Y 100
+#define THRESHOLD_Y 500
 
 // Main loop, read and display data
 void loop()
 {
+  uint8_t ST1;
+  do
+  {
+    I2Cread(MAG_ADDRESS,0x02,1,&ST1);
+  }
+  while (!(ST1&0x01));
 
+  // Read magnetometer data  
+  uint8_t Mag[7];  
+  I2Cread(MAG_ADDRESS,0x03,7,Mag);
+  
   // Magnetometer
   int16_t mx=-(Mag[3]<<8 | Mag[2]);
   int16_t my=-(Mag[1]<<8 | Mag[0]);
@@ -105,8 +115,10 @@ void loop()
   if( abs(my) >= THRESHOLD_Y ) {
     //Consider a car passed and report in serial port...
     carCounter++;
-    SerialUSB.print ("Car detected. Current Counter: "); 
-    SerialUSB.print (carCounter, DEC); 
+    SerialUSB.print("Car detected. Current Counter: ");
+    SerialUSB.println(carCounter, DEC);
+
+    delay(500);
   }
   
 }
