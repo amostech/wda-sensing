@@ -8,6 +8,7 @@ import serial
 app = QtGui.QApplication([])
 
 p = pg.plot()
+#p.setRange(xRange=[0,100],yRange=[-800,800])
 p.setWindowTitle('live plot from serial')
 curve = p.plot()
 
@@ -20,8 +21,8 @@ def update():
     line = raw.readline()
     if (line):
        line=line.split(",")
-       if len(line)==4:
-            data_mx.append(float(line[1]))
+       if len(line)==4:#Included vector magnitude value
+            data_mx.append(float(line[3]))
             if len(data_mx) > 100:
                 data_mx = data_mx[1:]
             xdata = np.array(data_mx, dtype='float64')

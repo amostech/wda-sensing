@@ -1,33 +1,6 @@
-/* MPU9250 Basic Example Code
- by: Kris Winer
- date: April 1, 2014
- license: Beerware - Use this code however you'd like. If you
- find it useful you can buy me a beer some time.
- Modified by Brent Wilkins July 19, 2016
 
- Demonstrate basic MPU-9250 functionality including parameterizing the register
- addresses, initializing the sensor, getting properly scaled accelerometer,
- gyroscope, and magnetometer data out. Added display functions to allow display
- to on breadboard monitor. Addition of 9 DoF sensor fusion using open source
- Madgwick and Mahony filter algorithms. Sketch runs on the 3.3 V 8 MHz Pro Mini
- and the Teensy 3.1.
-
- SDA and SCL should have external pull-up resistors (to 3.3V).
- 10k resistors are on the EMSENSR-9250 breakout board.
-
- Hardware setup:
- MPU9250 Breakout --------- Arduino
- VDD ---------------------- 3.3V
- VDDI --------------------- 3.3V
- SDA ----------------------- A4
- SCL ----------------------- A5
- GND ---------------------- GND
- */
-
-#include "quaternionFilters.h"
 #include "MPU9250.h"
 
-#define AHRS true         // Set to false for basic data read
 #define SerialDebug true  // Set to true to get Serial output for debugging
 
 // Pin definitions
@@ -38,42 +11,51 @@ MPU9250 myIMU;
 
 /*WDA Specific Pins*/
 #define IMU_PIN_TO_PROC 38
+#define CALCULATE_MAGNETIC_ENVIRONMENTAL_STEPS 200
+#define THRESHOLD_FROM_AVG 35
+#define CONVERT_TO_MICROTESLA 4912./8190. //microTesla
 
-void InterruptServiceRoutineMagnetometer() {
-  
-  SerialUSB.println("====================================================> Interrupt CALLED!");
+int countForward = 0;
+int countBackward = 0;
+bool forwardFlag = 0;
+bool backwardFlag = 0;
 
-  if (myIMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
-  {  
-   
-    myIMU.readMagData(myIMU.magCount);  // Read the x/y/z adc values
-    myIMU.getMres();
+void calculateMagneticEnvironmentalBias() {
+    
+    int i = 0;
+    
     // User environmental x-axis correction in milliGauss, should be
     // automatically calculated
-    myIMU.magbias[0] = +470.;
+    myIMU.magbias[0] = 0;
     // User environmental x-axis correction in milliGauss TODO axis??
-    myIMU.magbias[1] = +120.;
+    myIMU.magbias[1] = 0;
     // User environmental x-axis correction in milliGauss
-    myIMU.magbias[2] = +125.;
+    myIMU.magbias[2] = 0;
 
-    // Calculate the magnetometer values in milliGauss
-    // Include factory calibration per data sheet and user environmental
-    // corrections
-    // Get actual magnetometer value, this depends on scale being set
-    myIMU.mx = (float)myIMU.magCount[0]*myIMU.mRes*myIMU.magCalibration[0] -
-               myIMU.magbias[0];
-    myIMU.my = (float)myIMU.magCount[1]*myIMU.mRes*myIMU.magCalibration[1] -
-               myIMU.magbias[1];
-    myIMU.mz = (float)myIMU.magCount[2]*myIMU.mRes*myIMU.magCalibration[2] -
-               myIMU.magbias[2];
-  }
+    SerialUSB.print("Wait... Calculating Offsets.");
+    for( i = 0; i < CALCULATE_MAGNETIC_ENVIRONMENTAL_STEPS; i++) {
+      while(!(myIMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01));
+     
+        myIMU.readMagData(myIMU.magCount);  // Read the x/y/z adc values
+        //myIMU.getMres();
+      
+        myIMU.magbias[0] += (float) myIMU.magCount[0]*CONVERT_TO_MICROTESLA;
+        myIMU.magbias[1] += (float) myIMU.magCount[1]*CONVERT_TO_MICROTESLA;
+        myIMU.magbias[2] += (float) myIMU.magCount[2]*CONVERT_TO_MICROTESLA;
+       
+    }
 
-  SerialUSB.print("x: ");
-  SerialUSB.print(myIMU.mx);
-  SerialUSB.print(",y: ");
-  SerialUSB.print(myIMU.my);
-  SerialUSB.print(",z: ");
-  SerialUSB.print(myIMU.mz);
+  myIMU.magbias[0] /= CALCULATE_MAGNETIC_ENVIRONMENTAL_STEPS;
+  myIMU.magbias[1] /= CALCULATE_MAGNETIC_ENVIRONMENTAL_STEPS;
+  myIMU.magbias[2] /= CALCULATE_MAGNETIC_ENVIRONMENTAL_STEPS;
+
+  SerialUSB.println("Environmental Offsets Calculated: ");
+  SerialUSB.println("x: ");
+  SerialUSB.println(myIMU.magbias[0],DEC);
+  SerialUSB.println("y: ");
+  SerialUSB.println(myIMU.magbias[1],DEC);
+  SerialUSB.println("z: ");
+  SerialUSB.print(myIMU.magbias[2],DEC);
   SerialUSB.println();
 }
 
@@ -83,13 +65,7 @@ void setup()
 
   // TWBR = 12;  // 400 kbit/sec I2C speed
   while(!SerialUSB);
-    SerialUSB.begin(9600);
-  
-  // Set up the interrupt pin, its set as active high, push-pull
-  //pinMode(intPin, INPUT);
-  //digitalWrite(intPin, LOW);
-  //pinMode(myLed, OUTPUT);
-  //digitalWrite(myLed, HIGH);
+    SerialUSB.begin(115200);
 
   // Read the WHO_AM_I register, this is a good test of communication
   byte c = myIMU.readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);
@@ -145,6 +121,8 @@ void setup()
       SerialUSB.println(myIMU.magCalibration[2], 2);
     }
 
+     calculateMagneticEnvironmentalBias();
+
   } // if (c == 0x71)
   else
   {
@@ -159,46 +137,75 @@ void setup()
   
 }
 
-
+double magnitude(float x, float y, float z) {
+  return sqrt(x*x + y*y + z*z);
+}
 
 void loop()
 {
   do 
   {  
-   
     myIMU.readMagData(myIMU.magCount);  // Read the x/y/z adc values
     myIMU.getMres();
-    // User environmental x-axis correction in milliGauss, should be
-    // automatically calculated
-    myIMU.magbias[0] = +470.;
-    // User environmental x-axis correction in milliGauss TODO axis??
-    myIMU.magbias[1] = +120.;
-    // User environmental x-axis correction in milliGauss
-    myIMU.magbias[2] = +125.;
-
+    
     // Calculate the magnetometer values in milliGauss
     // Include factory calibration per data sheet and user environmental
     // corrections
     // Get actual magnetometer value, this depends on scale being set
-    myIMU.mx = (float)myIMU.magCount[0]*myIMU.mRes*myIMU.magCalibration[0] -
-               myIMU.magbias[0];
-    myIMU.my = (float)myIMU.magCount[1]*myIMU.mRes*myIMU.magCalibration[1] -
-               myIMU.magbias[1];
-    myIMU.mz = (float)myIMU.magCount[2]*myIMU.mRes*myIMU.magCalibration[2] -
-               myIMU.magbias[2];
+    myIMU.mx = (float)myIMU.magCount[0]*CONVERT_TO_MICROTESLA;
+    myIMU.my = (float)myIMU.magCount[1]*CONVERT_TO_MICROTESLA;
+    myIMU.mz = (float)myIMU.magCount[2]*CONVERT_TO_MICROTESLA;
   } while(!(myIMU.readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01));
-  SerialUSB.print("x: ");
-  SerialUSB.print(myIMU.mx);
-  SerialUSB.print(" ");
-  SerialUSB.print(myIMU.magCalibration[0]);
-  SerialUSB.print(",y: ");
-  SerialUSB.print(myIMU.my);
-    SerialUSB.print(" ");
-  SerialUSB.print(myIMU.magCalibration[1]);
-  SerialUSB.print(",z: ");
-  SerialUSB.print(myIMU.mz);
-    SerialUSB.print(" ");
-  SerialUSB.print(myIMU.magCalibration[2]);
-  SerialUSB.println();
+
+  int posThreshold = myIMU.magbias[0] + THRESHOLD_FROM_AVG;
+  int negThreshold = myIMU.magbias[0] - THRESHOLD_FROM_AVG;
+  if( myIMU.mx > posThreshold ) {
+    if(!forwardFlag){
+      countForward++;
+      forwardFlag = true;
+
+      if(!SerialDebug) {
+        SerialUSB.print("FORWARD_EVENT_DETECTED Current Count: ");
+        SerialUSB.println(countForward);
+      }
+      
+    }
+    
+  }
+  else{
+    if(forwardFlag){
+      forwardFlag = false;
+    }
+  }
+
+  if( myIMU.mx < negThreshold) {
+    if(!backwardFlag){
+      countBackward++;
+      backwardFlag = true;
+
+      if(!SerialDebug) {
+        SerialUSB.print("BACKWARD_EVENT_DETECTED Current Count: ");
+        SerialUSB.println(countBackward);
+      }
+      
+    }
+   
+  }
+  else{
+    if(backwardFlag){
+      backwardFlag = false;
+    }
+  }
+
+  if(SerialDebug) {
+    SerialUSB.print(myIMU.mx);
+    SerialUSB.print(",");
+    SerialUSB.print(myIMU.my);
+    SerialUSB.print(",");
+    SerialUSB.print(myIMU.mz);
+    //SerialUSB.print(",");
+    //SerialUSB.print(magnitude(myIMU.mx, myIMU.my, myIMU.mz));
+    SerialUSB.println();
+  }
   delay(100);
 }
