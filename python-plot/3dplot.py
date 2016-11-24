@@ -9,8 +9,8 @@ x = []  #vstack((rand(150,2) + array([.5,.5]),rand(150,2)))
 y = []
 z = []
 
-#file = open('3d-experiment-with-toy-track.csv', 'r')
-file = open('data.csv', 'r')
+file = open('3d-experiment-with-toy-track.csv', 'r')
+#file = open('data.csv', 'r')
 
 for line in file:
     arr=line.replace("\r\n","").split(",")

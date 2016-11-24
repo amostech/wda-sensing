@@ -203,8 +203,6 @@ void loop()
     SerialUSB.print(myIMU.my);
     SerialUSB.print(",");
     SerialUSB.print(myIMU.mz);
-    //SerialUSB.print(",");
-    //SerialUSB.print(magnitude(myIMU.mx, myIMU.my, myIMU.mz));
     SerialUSB.println();
   }
   delay(100);
