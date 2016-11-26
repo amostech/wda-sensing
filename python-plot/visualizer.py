@@ -22,7 +22,7 @@ def update():
     if (line):
        line=line.split(",")
        if len(line)==4:#Included vector magnitude value
-            data_mx.append(float(line[3]))
+            data_mx.append(float(line[0]))
             if len(data_mx) > 100:
                 data_mx = data_mx[1:]
             xdata = np.array(data_mx, dtype='float64')
