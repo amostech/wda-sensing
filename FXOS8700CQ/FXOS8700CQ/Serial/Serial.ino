@@ -11,7 +11,7 @@ void setup() {
   SerialUSB.begin(9600);
   SerialUSB.println("hi");
   Wire1.begin();
-  Wire1.setClock(400000L);
+  //Wire1.setClock(100000L);
   
   // Initialize the FXOS8700CQ
   //sensor.init();

@@ -21,8 +21,8 @@ def update():
     line = raw.readline()
     if (line):
        line=line.split(",")
-       if len(line)==4:#Included vector magnitude value
-            data_mx.append(float(line[0]))
+       if len(line)==5:#Included vector magnitude value
+            data_mx.append(float(line[4]))
             if len(data_mx) > 100:
                 data_mx = data_mx[1:]
             xdata = np.array(data_mx, dtype='float64')
