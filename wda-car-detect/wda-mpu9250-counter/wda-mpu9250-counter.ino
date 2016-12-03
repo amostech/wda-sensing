@@ -1,7 +1,7 @@
 
 #include "MPU9250.h"
 
-#define SerialDebug false  // Set to true to get Serial output for debugging
+#define SerialDebug true  // Set to true to get Serial output for debugging
 
 // Pin definitions
 int intPin = 12;  // These can be changed, 2 and 3 are the Arduinos ext int pins
