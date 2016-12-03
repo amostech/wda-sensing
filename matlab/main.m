@@ -4,7 +4,7 @@
 % freqDomain
 % spectrogram
 
-file = '../python-plot/3d-experiment-with-toy-track.csv';
+file = '../python-plot/lsm-303-ycount-20.csv';
 Fs = 80;
 
 timeDomain(file);

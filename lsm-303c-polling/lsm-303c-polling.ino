@@ -16,12 +16,18 @@ int carCount = 0;
 long int ti;
 
 #define AVERAGING_BUFFER_SIZE 1000
-#define THRESHOLD 13.0
+#define THRESHOLD_1 10
+#define THRESHOLD_2 4
 
-int gMagOffsetX = 0;
-int gMagOffsetY = 0;
-int gMagOffsetZ = 0;
-int gMAD = 0;
+
+float gMagneticOffset = 0;
+float gMAD = 0;
+
+int countForward = 0;
+int countBackward = 0;
+bool forwardFlag = 0;
+bool backwardFlag = 0;
+
 
 #define PLOT true
 
@@ -33,7 +39,7 @@ float magnitude(float x, float y, float z) {
 * MAD
 */
 
-void printArray(int a[], int l){
+void printArray(float a[], int l){
   int i = 0;
   SerialUSB.print("[ ");
   for(i = 0; i < l; i++) {
@@ -43,10 +49,11 @@ void printArray(int a[], int l){
   SerialUSB.println(" ]");
 }
 
-void MedianAD(int arr[], int* mad /*where to store mad*/, int* median /*where to store the median*/) {
+
+void MedianAD(float arr[], float* mad /*where to store mad*/, float* median /*where to store the median*/) {
   
   int i = 0;
-  int deviations[AVERAGING_BUFFER_SIZE] = {0};
+  float deviations[AVERAGING_BUFFER_SIZE] = {0};
 
   SerialUSB.print("Arr before sort: ");
   printArray(arr,AVERAGING_BUFFER_SIZE);
@@ -78,12 +85,11 @@ void calculateMagneticEnvironmentalAverage() {
     
     int i = 0;
     int count = 0;
-    int median = 0;
-    int mad = 0;
+    float median = 0;
+    float mad = 0;
+    float x = 0, y = 0, z = 0;
     
-    //float avg_buff_x[AVERAGING_BUFFER_SIZE] = {0};
-    //float avg_buff_y[AVERAGING_BUFFER_SIZE] = {0};
-    int avg_buff_z[AVERAGING_BUFFER_SIZE] = {0};
+    float avg_buff[AVERAGING_BUFFER_SIZE] = {0};
 
     uint8_t ST1;
 
@@ -97,46 +103,47 @@ void calculateMagneticEnvironmentalAverage() {
 
     SerialUSB.print("Wait... Calculating Offsets.");
     SerialUSB.println("");
-    for( i = 0; i < AVERAGING_BUFFER_SIZE; i++){
-      AxesRaw_t axes;
-      myIMU.MAG_GetMagRaw(axes);
-      avg_buff_z[i] = axes.yAxis;
+    for( i = 0; i < AVERAGING_BUFFER_SIZE; i++) {
+       
+       AxesRaw_t axes;
+       x = myIMU.readMagX();
+       y = myIMU.readMagY();
+       z = myIMU.readMagZ();
+       avg_buff[i] = magnitude(x,y,z);
+       
     }
-        
-      
-      MedianAD(avg_buff_z,&gMAD,&median);
+
+      MedianAD(avg_buff,&gMAD,&median);
       for( i = 0; i < AVERAGING_BUFFER_SIZE; i++) {
 
-          if( avg_buff_z[i] >= (median-mad) && avg_buff_z[i] <= (median+mad) ) {
-            gMagOffsetZ += avg_buff_z[i];
+          if( avg_buff[i] >= (median-mad) && avg_buff[i] <= (median+mad) ) {
+            gMagneticOffset += avg_buff[i];
             count++;
           }
       }
-      
 
-
-    gMagOffsetZ /= count;
+    gMagneticOffset /= count;
     SerialUSB.println("Environmental Offset Calculated.");
-    SerialUSB.print("Averaging Mode: ");
+    SerialUSB.print("Averaging Mode: ");      
     SerialUSB.println("MEDIAN_ABSOLUTE_DEVIATION");
-
+    
     SerialUSB.print("Baseline: ");
-    SerialUSB.println(gMagOffsetZ,DEC);
+    SerialUSB.println(gMagneticOffset,DEC);
     SerialUSB.print("MAD: ");
     SerialUSB.println(gMAD,DEC);
 }
 
-void swap ( int* a, int* b )
+void swap ( float* a, float* b )
 {
-    int t = *a;
+    float t = *a;
     *a = *b;
     *b = t;
 }
  
 /* This function is same in both iterative and recursive*/
-int partition (int arr[], int l, int h)
+int partition (float arr[], int l, int h)
 {
-    int x = arr[h];
+    float x = arr[h];
     int i = (l - 1);
  
     for (int j = l; j <= h- 1; j++)
@@ -154,10 +161,10 @@ int partition (int arr[], int l, int h)
 /* A[] --> Array to be sorted, 
    l  --> Starting index, 
    h  --> Ending index */
-void quickSortIterative (int arr[], int l, int h)
+void quickSortIterative (float arr[], int l, int h)
 {
     // Create an auxiliary stack
-    int stack[ h - l + 1 ];
+    float stack[ h - l + 1 ];
  
     // initialize top of stack
     int top = -1;
@@ -232,12 +239,12 @@ void setup()
   myIMU.interruptMagDisable();
   calculateMagneticEnvironmentalAverage();
 
-  int th;
-  if (gMagOffsetZ < 0){
-    th = (gMagOffsetZ - THRESHOLD*gMAD);
+  /*int th;
+  if (gMagneticOffset < 0){
+    th = (gMagneticOffset - THRESHOLD*gMAD);
   }
   else {
-    th = (gMagOffsetZ + THRESHOLD*gMAD);
+    th = (gMagneticOffset + THRESHOLD*gMAD);
   }
 
   int16_t th_int = (int16_t)(th);
@@ -245,24 +252,24 @@ void setup()
     th_int *= -1;
   }
  // uint16_t iMagOffsetZ = (uint16_t)th_int;
-  uint16_t iMagOffsetZ =  (uint16_t)th_int;//= (th_int >= 0) ? ((uint16_t)th_int) : ((uint16_t)(-1*th_int));
-  
+  uint16_t gMagneticOffset =  (uint16_t)th_int;//= (th_int >= 0) ? ((uint16_t)th_int) : ((uint16_t)(-1*th_int));
+  */
   SerialUSB.print("Float Offset: ");
-  SerialUSB.println( gMagOffsetZ, DEC );
-  SerialUSB.print("Float adjusted offset: ");
-  SerialUSB.println( th, DEC );
-  SerialUSB.print("th_int: ");
-  SerialUSB.println( th_int, DEC );
-  SerialUSB.print("uint16 offset: ");
-  SerialUSB.println( iMagOffsetZ, DEC );
-  SerialUSB.print("MAG_INT_THS_L: ");
+  SerialUSB.println( gMagneticOffset, DEC );
+ // SerialUSB.print("Float adjusted offset: ");
+//  SerialUSB.println( th, DEC );
+//  SerialUSB.print("th_int: ");
+//  SerialUSB.println( th_int, DEC );
+//  SerialUSB.print("uint16 offset: ");
+//  SerialUSB.println( gMagneticOffset, DEC );
+//  SerialUSB.print("MAG_INT_THS_L: ");
   
-  SerialUSB.println( (iMagOffsetZ & 0xFF), HEX);
-  SerialUSB.print("MAG_INT_THS_H: ");
-  SerialUSB.println(   (iMagOffsetZ >> 8 ) & 0x7F  , HEX);
+ // SerialUSB.println( (gMagneticOffset & 0xFF), HEX);
+ // SerialUSB.print("MAG_INT_THS_H: ");
+ // SerialUSB.println(   (gMagneticOffset >> 8 ) & 0x7F  , HEX);
   
   if(!PLOT) {
-    myIMU.interruptMagEnable(iMagOffsetZ);
+    myIMU.interruptMagEnable(gMagneticOffset);
     pinMode(interruptPin,INPUT);
     attachInterrupt(digitalPinToInterrupt(interruptPin), interrupt, LOW);
   } else {
@@ -274,6 +281,7 @@ void setup()
 
 void loop()
 {
+  float mag = 0;
 
   if(!PLOT) {
     
@@ -284,20 +292,29 @@ void loop()
     
     float x=0,y=0,z=0;
 
-    SerialUSB.print(millis()-ti,DEC);
-    SerialUSB.print(",");
     x = myIMU.readMagX();
-    if ( !isnan(x) )
-    {
-      SerialUSB.print(x, 4);
-      SerialUSB.print(",");
-      SerialUSB.print((y=myIMU.readMagY()), 4);
-      SerialUSB.print(",");
-      SerialUSB.print((z=myIMU.readMagZ()), 4);
-      SerialUSB.print(",");
-      SerialUSB.println(magnitude(x,y,z) );
-    }
+    y = myIMU.readMagY();
+    z = myIMU.readMagZ();
+
+    mag = magnitude(x, y, z);
   
+    int posThreshold = gMagneticOffset + THRESHOLD_1*gMAD;
+    int negThreshold = gMagneticOffset - THRESHOLD_1*gMAD;
+
+    if( mag > posThreshold ) {
+    
+      if(!forwardFlag){
+      
+        countForward++;
+        forwardFlag = true;
+
+        SerialUSB.print("EVENT_DETECTED Current Count: ");
+        SerialUSB.println(countForward);
+      }
+    }
+    else if ( forwardFlag && /*with sign!*/(posThreshold - mag) > THRESHOLD_2*gMAD ) {
+      forwardFlag = false;
+    }
     delay(10);
   }
   

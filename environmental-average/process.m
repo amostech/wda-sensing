@@ -1,7 +1,7 @@
 clear;
 
 %[t,x,y,z,mf] = loadData('../experiment-1-distance-characterization/60dan30mph.csv');
-filename = '../python-plot/lsm-303-under-20.csv'
+filename = '../python-plot/lsm-303-ycount-20-10cm.csv'
 %filename = '../simulation-of-distance-with-racing-track/20counts_snr-1_19.csv'
 %filename = '../experiment-1-distance-characterization/powerdue/30raw10mph.csv'
 %filename = 'overnight.csv'
