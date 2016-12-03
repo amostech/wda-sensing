@@ -9,7 +9,7 @@ status_t LSM303C::begin()
   begin(// Default to I2C bus
         MODE_I2C,
         // Initialize magnetometer output data rate to 0.625 Hz (turn on device)
-        MAG_DO_40_Hz,
+        MAG_DO_80_Hz,
         // Initialize magnetic field full scale to +/-16 gauss
         MAG_FS_16_Ga,
         // Enabling block data updating
@@ -242,9 +242,45 @@ float LSM303C::readTempF()
 status_t LSM303C::checkWhoAmI(){
   uint8_t whoAmI;
   MAG_ReadReg(MAG_WHO_AM_I, whoAmI);
+  SerialUSB.println(whoAmI,HEX);
   return (whoAmI == MAG_WHO_AM_I_VAL) ? IMU_SUCCESS : IMU_HW_ERROR;
 }
 
+status_t LSM303C::interruptMagEnable(uint16_t newThreshold){
+    uint8_t interruptEnabled;
+    // XIEN = 1
+    // YIEN = 1
+    // ZIEN = 1
+    // 0 Fixed
+    // 1 Fixed
+    // IEA = 1 - Interrupt Active High for Magnetometer
+    // IEL = 0 - Interrupt latch Hold or not Hold interrupt pin high
+    // IEN = 1 - Interrupt Enable
+    MAG_WriteReg(MAG_INT_CFG,0x49);
+    MAG_WriteReg(MAG_INT_THS_L, (newThreshold & 0xFF) );
+    MAG_WriteReg(MAG_INT_THS_H, ( (newThreshold >> 8 ) & 0x7F )); //First bit always zero
+    return IMU_SUCCESS;
+}
+
+status_t LSM303C::interruptMagDisable(){
+    uint8_t interruptDisabled;
+    // XIEN = 1
+    // YIEN = 1
+    // ZIEN = 1
+    // 0 Fixed
+    // 1 Fixed
+    // IEA = 1 - Interrupt Active High for Magnetometer
+    // IEL = 0 - Interrupt latch Hold or not Hold interrupt pin high
+    // IEN = 1 - Interrupt Enable
+    MAG_WriteReg(MAG_INT_CFG,0x08);
+    //MAG_WriteReg(MAG_INT_THS_L, 0x00);
+    //MAG_WriteReg(MAG_INT_THS_H, 0x04);
+    return IMU_SUCCESS;
+}
+
+void LSM303C::readMagInterruptSource(uint8_t& intSource) {
+    MAG_ReadReg(MAG_INT_SRC, intSource);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,13 +347,13 @@ float LSM303C::readMag(AXIS_t dir)
   switch (dir)
   {
   case xAxis:
-    return magData.xAxis * SENSITIVITY_MAG;
+          return magData.xAxis * SENSITIVITY_MAG;
     break;
   case yAxis:
-    return magData.yAxis * SENSITIVITY_MAG;
+          return magData.yAxis * SENSITIVITY_MAG;
     break;
   case zAxis:
-    return magData.zAxis * SENSITIVITY_MAG;
+          return magData.zAxis * SENSITIVITY_MAG;
     break;
   default:
     return NAN;

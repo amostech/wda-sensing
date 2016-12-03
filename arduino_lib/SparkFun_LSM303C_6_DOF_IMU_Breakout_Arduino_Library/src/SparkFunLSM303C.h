@@ -8,7 +8,7 @@
 #include "DebugMacros.h"
 
 #define SENSITIVITY_ACC   0.06103515625   // LSB/mg
-#define SENSITIVITY_MAG   0.00048828125   // LSB/Ga
+#define SENSITIVITY_MAG   0.00048828125*100   // LSB/Ga
 
 #define DEBUG 0 // Change to 1 (nonzero) to enable debug messages
 
@@ -51,8 +51,14 @@ class LSM303C : public SparkFunIMU
     float   readMagZ(void);
     float  readTempC(void);
     float  readTempF(void);
+    
+    //WDA Sensing Team Custom
     status_t checkWhoAmI();
+    status_t interruptMagEnable(uint16_t newThreshold);
+    status_t interruptMagDisable();
+    void readMagInterruptSource(uint8_t& intSource);
 
+    status_t MAG_GetMagRaw(AxesRaw_t&);
   protected:
     // Variables to store the most recently read raw data from sensor
     AxesRaw_t accelData = {NAN, NAN, NAN};
@@ -86,8 +92,8 @@ class LSM303C : public SparkFunIMU
     status_t ACC_GetAccRaw(AxesRaw_t&);
     float    readAccel(AXIS_t); // Reads the accelerometer data from IC
 
-    status_t MAG_GetMagRaw(AxesRaw_t&);
-    status_t MAG_TemperatureEN(MAG_TEMP_EN_t);    
+    
+    status_t MAG_TemperatureEN(MAG_TEMP_EN_t);
     status_t MAG_XYZ_AxDataAvailable(MAG_XYZDA_t&);
     float    readMag(AXIS_t);   // Reads the magnetometer data from IC
 

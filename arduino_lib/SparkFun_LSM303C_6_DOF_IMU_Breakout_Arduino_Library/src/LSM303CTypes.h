@@ -213,4 +213,15 @@ typedef enum
   ACC_ZYX_OVERRUN             = 0x80
 } ACC_STATUS_FLAGS_t;
 
+//WDA Sensing Custom
+typedef enum
+{
+    MAG_INT_POS_X               = 0x01,
+    MAG_INT_POS_Y               = 0x02,
+    MAG_INT_POS_Z               = 0x03,
+    MAG_INT_NEG_X               = 0x04,
+    MAG_INT_NEG_Y               = 0x05,
+    MAG_INT_NEG_Z               = 0x06
+} MAG_INT_SRC_FLAGS_t;
+
 #endif
