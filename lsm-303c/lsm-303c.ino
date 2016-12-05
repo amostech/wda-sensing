@@ -4,6 +4,7 @@
 #include "SparkFunIMU.h"
 #include "SparkFunLSM303C.h"
 #include "LSM303CTypes.h"
+#include <PowerDue.h>
 
 // #define DEBUG 1 in SparkFunLSM303C.h turns on debugging statements.
 // Redefine to 0 to turn them off.
@@ -23,7 +24,7 @@ int gMagOffsetY = 0;
 int gMagOffsetZ = 0;
 int gMAD = 0;
 
-#define PLOT true
+#define PLOT false
 
 float magnitude(float x, float y, float z) {
   return sqrt(x*x + y*y + z*z);
@@ -200,19 +201,21 @@ void quickSortIterative (int arr[], int l, int h)
 */
 
 void interrupt(){
-  
   uint8_t intSource;  
   myIMU.readMagInterruptSource(intSource);
   
   if(!(intSource&0x48)) {
     return;
   }
-
+    
   if(ti != millis()){
+    PowerDue.LED(PD_RED);
     carCount++;
     ti = millis();
+    SerialUSB.println(ti);
     SerialUSB.print(" count ");
     SerialUSB.println(carCount,DEC);
+  PowerDue.LED(PD_OFF);
   }
   
 }
@@ -269,13 +272,13 @@ void setup()
     //save initial time for plots
     ti = millis();
   }
-  
+  PowerDue.init();
 }
 
 void loop()
 {
 
-  if(!PLOT) {
+ if(!PLOT) {
     
     SerialUSB.println("Entering sleep mode...");
     pmc_enable_waitmode();
@@ -300,5 +303,4 @@ void loop()
   
     delay(10);
   }
-  
 }

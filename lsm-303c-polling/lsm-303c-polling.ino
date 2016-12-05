@@ -4,6 +4,8 @@
 #include "SparkFunIMU.h"
 #include "SparkFunLSM303C.h"
 #include "LSM303CTypes.h"
+#include <PowerDue.h>
+
 
 // #define DEBUG 1 in SparkFunLSM303C.h turns on debugging statements.
 // Redefine to 0 to turn them off.
@@ -16,8 +18,8 @@ int carCount = 0;
 long int ti;
 
 #define AVERAGING_BUFFER_SIZE 1000
-#define THRESHOLD_1 10
-#define THRESHOLD_2 4
+#define THRESHOLD_1 20
+#define THRESHOLD_2 10
 
 
 float gMagneticOffset = 0;
@@ -226,7 +228,7 @@ void interrupt(){
 
 void setup()
 {
-  
+PowerDue.init();  
   int i;
   while(!SerialUSB);
   SerialUSB.begin(115200);
@@ -281,6 +283,7 @@ void setup()
 
 void loop()
 {
+  
   float mag = 0;
 
   if(!PLOT) {
@@ -290,9 +293,12 @@ void loop()
  
   } else {
     
+   PowerDue.LED(PD_RED);    
     float x=0,y=0,z=0;
-
+SerialUSB.println(millis());
     x = myIMU.readMagX();
+  SerialUSB.println(millis());    
+  PowerDue.LED(PD_OFF);
     y = myIMU.readMagY();
     z = myIMU.readMagZ();
 
@@ -304,18 +310,21 @@ void loop()
     if( mag > posThreshold ) {
     
       if(!forwardFlag){
-      
+    
+     
         countForward++;
         forwardFlag = true;
 
         SerialUSB.print("EVENT_DETECTED Current Count: ");
         SerialUSB.println(countForward);
+
       }
     }
     else if ( forwardFlag && /*with sign!*/(posThreshold - mag) > THRESHOLD_2*gMAD ) {
       forwardFlag = false;
     }
+    
     delay(10);
   }
-  
+
 }
