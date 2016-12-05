@@ -16,8 +16,8 @@ int carCount = 0;
 long int ti;
 
 #define AVERAGING_BUFFER_SIZE 1000
-#define THRESHOLD_1 10
-#define THRESHOLD_2 4
+#define THRESHOLD_1 7
+#define THRESHOLD_2 2
 
 
 float gMagneticOffset = 0;

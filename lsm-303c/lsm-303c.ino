@@ -16,14 +16,14 @@ int carCount = 0;
 long int ti;
 
 #define AVERAGING_BUFFER_SIZE 1000
-#define THRESHOLD 13.0
+#define THRESHOLD 6.5
 
 int gMagOffsetX = 0;
 int gMagOffsetY = 0;
 int gMagOffsetZ = 0;
 int gMAD = 0;
 
-#define PLOT true
+#define PLOT false
 
 float magnitude(float x, float y, float z) {
   return sqrt(x*x + y*y + z*z);
