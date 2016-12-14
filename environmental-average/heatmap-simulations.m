@@ -58,8 +58,13 @@ snr_120 = [ 0.433333333	1	1	1	1	1;
                 0.2	0.08	0.52	0.56	0.68	0.76];
 
       
- colormap('hot');   % set colormap
+ colormap('parula');   % set colormap
  %surf(snr_120);
  %hold on
- imagesc(snr_120 + snr_219 + snr_151);        % draw image and scale colormap to values range
+ %imagesc(snr_120 + snr_219 + snr_151);        % draw image and scale colormap to values range
+ imagesc(snr_151)
+ title('Heat Map for Sweep of N1 and N2 for SNR=1.51 or Equivalent Distance=60cm')
+ ylabel('Values for N1')
+ xlabel('Values for N2')
+ set(gca,'fontsize',24)
  colorbar;          % show color scale       

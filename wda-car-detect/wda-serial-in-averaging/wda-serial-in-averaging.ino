@@ -10,7 +10,7 @@ int myLed  = 13;  // Set up pin 13 led for toggling
 /*WDA Specific Pins*/
 #define IMU_PIN_TO_PROC 38
 int AVERAGING_BUFFER_SIZE = 0;
-#define USE_MAD true
+#define USE_MAD false
 
 #define THRESHOLD_FROM_AVG 35
 #define CONVERT_TO_MICROTESLA 4912./8190. //microTesla

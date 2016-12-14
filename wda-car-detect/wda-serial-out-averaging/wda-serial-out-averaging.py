@@ -9,9 +9,9 @@ ser = serial.Serial('/dev/cu.usbmodem1411', baudrate=115200, parity=serial.PARIT
 
 s = ""
 
-#avgBufferSizes = np.arange(25,1025,25)
+avgBufferSizes = np.arange(25,4025,25)
 #tArr2 = np.arange(1,4,0.5)
-avgBufferSizes = [ 4000 ]
+#avgBufferSizes = [ 4000 ]
 
 x = []
 y = []
