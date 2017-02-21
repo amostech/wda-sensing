@@ -60,8 +60,13 @@ void MedianAD(int arr[], int* mad /*where to store mad*/, int* median /*where to
   SerialUSB.println(*median,DEC);
   
   //Now create the Absolute Deviations Array
-  for(i=0; i < AVERAGING_BUFFER_SIZE; i++)
-     deviations[i] = abs(arr[i] - *median);
+  for(i=0; i < AVERAGING_BUFFER_SIZE; i++) {
+     int temp = arr[i] - *median;
+    if (temp<0.0)
+     deviations[i] = -1.0 * temp;
+     else 
+     deviations[i] = temp;
+  }
 
   SerialUSB.print("Deviations Before Sort: ");
   printArray(deviations,AVERAGING_BUFFER_SIZE);
@@ -282,6 +287,7 @@ void loop()
     
     SerialUSB.println("Entering sleep mode...");
     pmc_enable_waitmode();
+    //pmc_enable_sleepmode(0);
  
   } else {
     

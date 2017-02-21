@@ -18,14 +18,8 @@ int carCount = 0;
 long int ti;
 
 #define AVERAGING_BUFFER_SIZE 1000
-<<<<<<< HEAD
 #define THRESHOLD_1 7
 #define THRESHOLD_2 2
-=======
-#define THRESHOLD_1 20
-#define THRESHOLD_2 10
->>>>>>> 53624170def1c57073d089e9456d3aa13d00e05e
-
 
 float gMagneticOffset = 0;
 float gMAD = 0;
@@ -50,7 +44,7 @@ void printArray(float a[], int l){
   int i = 0;
   SerialUSB.print("[ ");
   for(i = 0; i < l; i++) {
-    SerialUSB.print(a[i]);
+    SerialUSB.print(a[i],DEC);
     SerialUSB.print(" ");
   }
   SerialUSB.println(" ]");
@@ -74,7 +68,14 @@ void MedianAD(float arr[], float* mad /*where to store mad*/, float* median /*wh
   
   //Now create the Absolute Deviations Array
   for(i=0; i < AVERAGING_BUFFER_SIZE; i++)
-     deviations[i] = abs(arr[i] - *median);
+  {
+    float temp = arr[i] - *median;
+    if (temp<0.0)
+     deviations[i] = -1.0 * temp;
+     else 
+     deviations[i] = temp;
+  }
+    
 
   SerialUSB.print("Deviations Before Sort: ");
   printArray(deviations,AVERAGING_BUFFER_SIZE);
@@ -298,12 +299,8 @@ void loop()
  
   } else {
     
-   PowerDue.LED(PD_RED);    
     float x=0,y=0,z=0;
-SerialUSB.println(millis());
     x = myIMU.readMagX();
-  SerialUSB.println(millis());    
-  PowerDue.LED(PD_OFF);
     y = myIMU.readMagY();
     z = myIMU.readMagZ();
 
